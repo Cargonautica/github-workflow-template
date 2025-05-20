@@ -1,0 +1,7 @@
+{
+  "IgnoreDefaults": true,
+  "Verbose": true,
+  "Exclude": [
+    "^3rdparty/ignored-app/.*"
+  ]
+}

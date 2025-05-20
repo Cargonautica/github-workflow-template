@@ -1,0 +1,12 @@
+# Documentation for CODEOWNERS:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners#example-of-a-codeowners-file
+
+
+# Enforce project owners team as reviewers for all files
+* @Cargonautica/default-owners
+
+# Enforce project admins and owners as reviewers for all GitHub settings including GitHub Actions
+/.github/ @Cargonautica/default-owners
+
+# Enforce project admins and owners as reviewers for all files in the repo root dir
+/* @Cargonautica/default-owners

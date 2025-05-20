@@ -2,15 +2,9 @@
 # Configuration file for MegaLinter (https://megalinter.io/latest/config-variables/)
 
 ENABLE_LINTERS:
-  # - CPP_CPPLINT
-  # - CPP_CLANG_FORMAT
+  - ACTION_ACTIONLINT
   - DOCKERFILE_HADOLINT
   - EDITORCONFIG_EDITORCONFIG_CHECKER
-  # - GROOVY_NPM_GROOVY_LINT
-  # - JAVA_CHECKSTYLE
-  # - JAVA_PMD
-  # - KOTLIN_DETEKT
-  # - KOTLIN_KTLINT
   - MARKDOWN_MARKDOWNLINT
   - XML_XMLLINT
   - YAML_PRETTIER
@@ -18,9 +12,7 @@ ENABLE_LINTERS:
   - YAML_YAMLLINT
 
 # The listed linters will be run, but if errors are found, they will be considered as non-blocking
-DISABLE_ERRORS_LINTERS:
-  - CPP_CPPLINT
-  - CPP_CLANG_FORMAT
+DISABLE_ERRORS_LINTERS: []
 
 # Configuration for individual linters
 EDITORCONFIG_EDITORCONFIG_CHECKER_CONFIG_FILE: .editorconfig-checker.json

@@ -1,0 +1,27 @@
+---
+name: on-push
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+    with:
+      event: push
+      warn-on-failure: true
+
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      event: push
+      build-type: ${{ github.ref == 'refs/heads/main' && 'release' || 'debug' }}
+      unit-tests: false
+    secrets: inherit

@@ -1,0 +1,21 @@
+---
+name: setup-variables
+description: Reusable step for setting up build variables
+
+runs:
+  using: composite
+  steps:
+    - run: |
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          SOURCE="pr${{ github.event.pull_request.number }}"
+          SHA="$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-6)"
+        elif [[ "${{ github.event_name }}" == "push" ]]; then
+          SOURCE="$(echo ${{ github.ref }} | sed -E 's#^refs/(heads|tags)/##; s#/#_#g')"
+          SHA="$(echo ${{ github.sha }} | cut -c1-6)"
+        else
+          echo "::error::Unknown event name: ${{ github.event_name}}."
+          exit 1
+        fi
+        DATE="$(date +'%y%m%d-%H%M')"
+        echo "build_name_prefix=$DATE-$SOURCE-$SHA" >> "$GITHUB_ENV"
+      shell: bash

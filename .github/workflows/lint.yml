@@ -1,0 +1,74 @@
+---
+name: lint
+
+on:
+  workflow_call:
+    inputs:
+      event:
+        required: true
+        type: string
+        description: Event that triggered the workflow (push, pull_request)
+      warn-on-failure:
+        required: false
+        type: boolean
+        default: false
+        description: Warn the workflow if MegaLinter fails. Otherwise, fail the workflow
+
+permissions:
+  issues: write
+  pull-requests: write
+
+env:
+  # On push to integration/release branches validates all source code.
+  # On pull request validates just the git diff.
+  # Override with 'true' if you always want to lint all sources.
+  VALIDATE_ALL_CODEBASE: ${{ inputs.event == 'push' }}
+  # Fetch only last commit if push event
+  FETCH_DEPTH: ${{ inputs.event == 'push' && 1 || 0 }}
+
+jobs:
+  mega-linter:
+    # MegaLinter GitHub Action. More info at https://megalinter.io
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # GitHub token for authentication
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
+      - name: Lint
+        id: ml
+        uses: oxsecurity/megalinter/flavors/python@v8.7.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: ${{ inputs.warn-on-failure }}
+
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: megalinter-reports
+          path: |
+            megalinter-reports
+            mega-linter.log
+
+      - name: Log real outcome of MegaLinter
+        run: |
+          if [[ "${{ steps.ml.outcome }}" == "failure" ]]; then
+            if [[ "${{ inputs.warn-on-failure }}" == "true" ]]; then
+              echo "::warning::MegaLinter detected issues but they are ignored."
+            else
+              echo "::error::MegaLinter detected issues."
+            fi
+          fi
+        shell: bash
+
+  conventional-commits:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Lint
+        uses: wagoid/commitlint-github-action@v6.2.1

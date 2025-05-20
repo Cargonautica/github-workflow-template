@@ -1,0 +1,41 @@
+---
+name: unit-test
+description: Execute unit tests
+
+inputs:
+  app-path:
+    required: true
+    description: Path to the app directory
+
+runs:
+  using: composite
+  steps:
+    - name: Run Unit Tests
+      run: |
+        cd ${{ inputs.app-path }}
+        echo ./gradlew --no-daemon testDebugUnitTest
+      shell: bash
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-results
+        path: ${{ inputs.app-path }}/app/build/test-results/**/*.xml
+
+    - name: Upload HTML Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-html-report
+        path: ${{ inputs.app-path }}/app/build/reports/tests/testDebugUnitTest/
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        files: |
+          ${{ inputs.app-path }}/app/build/test-results/**/*.xml
+        check_name: unit-test GithubWorkflowTemplate
+        # TODO switch to true when https://github.com/EnricoMi/publish-unit-test-result-action/issues/12 is fixed
+        check_run: false

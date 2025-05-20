@@ -1,0 +1,35 @@
+---
+name: setup-android
+description: Setup Android development environment
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: 17
+        distribution: temurin
+
+    - name: Cache Gradle Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+
+    - name: Prepare Android environment
+      run: |
+        mkdir --parents ~/.android
+        touch ~/.android/repositories.cfg
+      shell: bash
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install SDK components
+      run: sdkmanager "platforms;android-32" "build-tools;34.0.0"
+      shell: bash

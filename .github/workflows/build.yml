@@ -1,0 +1,70 @@
+---
+name: build
+
+on:
+  workflow_call:
+    inputs:
+      event:
+        required: true
+        type: string
+        description: Event that triggered the workflow (push, pull_request)
+      build-type:
+        required: true
+        type: string
+        description: Build type (debug, release)
+      unit-tests:
+        required: true
+        type: boolean
+        description: Run unit tests
+
+jobs:
+  GithubWorkflowTemplate:
+    runs-on: [ubuntu-latest]
+    env:
+      ARTIFACTORY_USER: ${{ secrets.TECHNICAL_USER_ARTIFACTORY_USER }}
+      ARTIFACTORY_TOKEN: ${{ secrets.TECHNICAL_USER_ARTIFACTORY_TOKEN }}
+      APP_PATH: packages/apps/GithubWorkflowTemplate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Setup variables
+        uses: ./.github/actions/setup-variables
+
+      # - name: Setup Android environment
+      #   uses: ./.github/actions/setup-android
+
+      - name: Setup JFrog CLI
+        uses: ./.github/actions/setup-jfrog
+
+      - name: Build
+        run: |
+          mkdir --parents "$APP_PATH"
+          cd "$APP_PATH"
+          echo "Build type: ${{ inputs.build-type }}" > result.html
+          if [ "${{ inputs.build-type }}" = "debug" ]; then
+            echo ./gradlew --no-daemon :app:assembleDebug
+            exit
+          fi
+          if [ "${{ inputs.build-type }}" = "release" ]; then
+            echo ./gradlew --no-daemon :app:assembleRelease
+            exit
+          fi
+          echo ":error: Unknown build type: ${{ inputs.build-type }}."
+          exit 1
+
+      - name: Upload APKs to Artifactory
+        run: |
+          echo jf rt upload --flat \
+            "$APP_PATH/**/*.apk" \
+            "build-artifacts/GithubWorkflowTemplate/${{ inputs.build-type }}/${build_name_prefix}/"
+
+      - name: Unit Test
+        if: inputs.unit-tests
+        uses: ./.github/actions/unit-test
+        with:
+          app-path: ${{ env.APP_PATH }}

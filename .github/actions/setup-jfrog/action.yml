@@ -1,0 +1,25 @@
+---
+name: setup-jfrog
+description: Setup JFrog CLI
+
+runs:
+  using: composite
+  steps:
+    - name: Install JFrog CLI
+      run: |
+        mkdir --parents $HOME/.jfrog
+        curl --silent --fail --location https://getcli.jfrog.io/v2-jf | sh
+        mv jf $HOME/.jfrog/
+        echo "$HOME/.jfrog" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Configure JFrog CLI
+      run: |
+        jf --version
+        jf config add dt-artifactory \
+            --url=https://example.com/ \
+            --user="$ARTIFACTORY_USER" \
+            --access-token="$ARTIFACTORY_TOKEN" \
+            --interactive=false
+        jf config use dt-artifactory
+      shell: bash
